@@ -38,7 +38,7 @@ require 'savon'
 require 'marketingcloudsdk/version'
 
 module MarketingCloudSDK
-	
+
 	class SoapResponse < MarketingCloudSDK::Response
 
 		def continue
@@ -123,14 +123,18 @@ module MarketingCloudSDK
 		def header
 			if use_oAuth2_authentication == true then
 				{
-						'fueloauth' => {'fueloauth' => access_token},
-						:attributes! => { 'fueloauth'=>{ 'xmlns' => 'http://exacttarget.com' }}
+						'fueloauth' => {
+							'fueloauth' => access_token,
+							'@xmlns' => 'http://exacttarget.com'
+						}
 				}
 			else
 				raise 'Require legacy token for soap header' unless internal_token
 				{
-						'oAuth' => {'oAuthToken' => internal_token},
-						:attributes! => { 'oAuth' => { 'xmlns' => 'http://exacttarget.com' }}
+						'oAuth' => {
+							'oAuthToken' => internal_token,
+							'@xmlns' => 'http://exacttarget.com'
+						}
 				}
 			end
 		end
@@ -179,8 +183,10 @@ module MarketingCloudSDK
 		def soap_perform object_type, action, properties
 			message = {}
 			message['Action'] = action
-			message['Definitions'] = {'Definition' => properties}
-			message['Definitions'][:attributes!] = { 'Definition' => { 'xsi:type' => ('tns:' + object_type) }}
+			properties['@xsi:type'] = "tns:#{object_type}"
+			message['Definitions'] = {
+				'Definition' => properties,
+			}
 
 			soap_request :perform, message
 		end
@@ -193,17 +199,20 @@ module MarketingCloudSDK
 			if properties.is_a? Array then
 				message['Configurations']['Configuration'] = []
 				properties.each do |configItem|
+					configItem['@xsi:type'] = ('tns:' + object_type)
 					message['Configurations']['Configuration'] << configItem
 				end
 			else
-				message['Configurations'] = {'Configuration' => properties}
+				message['Configurations'] = {
+					'Configuration' => properties,
+					'@xsi:type' => ('tns:' + object_type)
+				}
 			end
-			message['Configurations'][:attributes!] = { 'Configuration' => { 'xsi:type' => ('tns:' + object_type) }}
 
 			soap_request :configure, message
 		end
 
-		def soap_get object_type, properties=nil, filter=nil
+		def soap_get(object_type, properties=nil, filter=nil)
 			if properties.nil? or properties.empty?
 				rsp = soap_describe object_type
 				if rsp.success?
@@ -221,15 +230,15 @@ module MarketingCloudSDK
 			message = {'ObjectType' => object_type, 'Properties' => properties}
 
 			if filter and filter.kind_of? Hash
-				message['Filter'] = filter
-				message[:attributes!] = { 'Filter' => { 'xsi:type' => 'tns:SimpleFilterPart' } }
-
 				if filter.has_key?('LogicalOperator')
-					message[:attributes!] = { 'Filter' => { 'xsi:type' => 'tns:ComplexFilterPart' }}
-					message['Filter'][:attributes!] = {
-						'LeftOperand' => { 'xsi:type' => 'tns:SimpleFilterPart' },
-					'RightOperand' => { 'xsi:type' => 'tns:SimpleFilterPart' }}
+					raise 'Missing SimpleFilterParts' if !filter['LeftOperand'] || !filter['RightOperand']
+					set_operand_type(filter['LeftOperand'])
+					set_operand_type(filter['RightOperand'])
+					filter['@xsi:type'] = 'tns:ComplexFilterPart'
+				else
+					filter['@xsi:type'] = 'tns:SimpleFilterPart'
 				end
+				message['Filter'] = filter
 			end
 			message = {'RetrieveRequest' => message}
 
@@ -274,9 +283,10 @@ module MarketingCloudSDK
 			#   end
 			#
 
+			properties['@xsi:type'] = "tns:#{object_type}"
+
 			message = {
 				'Objects' => properties,
-				:attributes! => { 'Objects' => { 'xsi:type' => ('tns:' + object_type) } }
 			}
 
 			if upsert

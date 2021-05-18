@@ -22,10 +22,10 @@ describe MarketingCloudSDK::Soap do
   it { should_not respond_to(:endpoint=) }
 
   it { should respond_to(:soap_client) }
-  
+
   it { should respond_to(:package_name) }
   it { should respond_to(:package_name=) }
-  
+
   it { should respond_to(:package_folders) }
   it { should respond_to(:package_folders=) }
 
@@ -41,9 +41,9 @@ describe MarketingCloudSDK::Soap do
       client.internal_token = 'innerspace'
       expect(client.header).to eq(
         {
-          'oAuth' => { 'oAuthToken' => 'innerspace' },
-          :attributes! => {
-            'oAuth' => { 'xmlns' => 'http://exacttarget.com' }
+          'oAuth' => {
+            'oAuthToken' => 'innerspace',
+            '@xmlns' => 'http://exacttarget.com'
           }
         }
       )
@@ -76,16 +76,20 @@ describe MarketingCloudSDK::Soap do
       it 'formats soap :create message for single object' do
         expect(subject.soap_post 'Subscriber', 'EmailAddress' => 'test@fuelsdk.com' ).to eq([:create,
           {
-            'Objects' => {'EmailAddress' => 'test@fuelsdk.com'},
-            :attributes! => {'Objects' => {'xsi:type' => ('tns:Subscriber')}}
+            'Objects' => {
+              'EmailAddress' => 'test@fuelsdk.com',
+              'xsi:type' => '@tns:Subscriber'
+            }
           }])
       end
 
       it 'formats soap :create message for multiple objects' do
         expect(subject.soap_post 'Subscriber', [{'EmailAddress' => 'first@fuelsdk.com'}, {'EmailAddress' => 'second@fuelsdk.com'}] ).to eq([:create,
           {
-            'Objects' => [{'EmailAddress' => 'first@fuelsdk.com'}, {'EmailAddress' => 'second@fuelsdk.com'}],
-            :attributes! => {'Objects' => {'xsi:type' => ('tns:Subscriber')}}
+            'Objects' => [
+              {'EmailAddress' => 'first@fuelsdk.com', '@xsi:type' => ('tns:Subscriber')},
+              {'EmailAddress' => 'second@fuelsdk.com', '@xsi:type' => ('tns:Subscriber')}
+            ]
           }])
       end
 
@@ -95,8 +99,8 @@ describe MarketingCloudSDK::Soap do
             'Objects' => {
               'EmailAddress' => 'test@fuelsdk.com',
               'Attributes' => [{'Name' => 'First Name', 'Value' => 'first'}],
+              '@xsi:type' => ('tns:Subscriber')
             },
-            :attributes! => {'Objects' => {'xsi:type' => ('tns:Subscriber')}}
           }])
       end
 
@@ -110,8 +114,8 @@ describe MarketingCloudSDK::Soap do
                 {'Name' => 'First Name', 'Value' => 'first'},
                 {'Name' => 'Last Name', 'Value' => 'subscriber'},
               ],
+              '@xsi:type' => ('tns:Subscriber')
             },
-            :attributes! => {'Objects' => {'xsi:type' => ('tns:Subscriber')}}
           }])
       end
 
@@ -124,15 +128,16 @@ describe MarketingCloudSDK::Soap do
                 'Attributes' => [
                   {'Name' => 'First Name', 'Value' => 'first'},
                   {'Name' => 'Last Name', 'Value' => 'subscriber'},
-                ]
+                ],
+                '@xsi:type' => ('tns:Subscriber')
               },
               {'EmailAddress' => 'second@fuelsdk.com',
                 'Attributes' => [
                   {'Name' => 'First Name', 'Value' => 'second'},
                   {'Name' => 'Last Name', 'Value' => 'subscriber'},
-                ]
+                ],
+                '@xsi:type' => ('tns:Subscriber')
               }],
-            :attributes! => {'Objects' => {'xsi:type' => ('tns:Subscriber')}}
           }])
       end
     end
