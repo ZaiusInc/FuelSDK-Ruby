@@ -38,13 +38,13 @@ require 'savon'
 require 'marketingcloudsdk/version'
 
 module MarketingCloudSDK
-	
+
 	class SoapResponse < MarketingCloudSDK::Response
 
 		def continue
 			rsp = nil
 			if more?
-				rsp = unpack @client.soap_client.call(:retrieve, :message => {'RetrieveRequest' => {'ContinueRequest' => request_id}})
+				rsp = unpack @client.soap_client.call(:retrieve, :message => {'ContinueRequest' => request_id})
 			else
 				puts 'No more data'
 			end
@@ -123,14 +123,14 @@ module MarketingCloudSDK
 		def header
 			if use_oAuth2_authentication == true then
 				{
-						'fueloauth' => {'fueloauth' => access_token},
-						:attributes! => { 'fueloauth'=>{ 'xmlns' => 'http://exacttarget.com' }}
+					'fueloauth' => {'fueloauth' => access_token},
+					:attributes! => { 'fueloauth'=>{ 'xmlns' => 'http://exacttarget.com' }}
 				}
 			else
 				raise 'Require legacy token for soap header' unless internal_token
 				{
-						'oAuth' => {'oAuthToken' => internal_token},
-						:attributes! => { 'oAuth' => { 'xmlns' => 'http://exacttarget.com' }}
+					'oAuth' => {'oAuthToken' => internal_token},
+					:attributes! => { 'oAuth' => { 'xmlns' => 'http://exacttarget.com' }}
 				}
 			end
 		end
@@ -147,15 +147,15 @@ module MarketingCloudSDK
 			self.refresh
 
 			soap_client_options = {
-					soap_header: header,
-					wsdl: wsdl,
-					endpoint: endpoint,
-					wsse_auth: ["*", "*"],
-					raise_errors: false,
-					log: debug,
-					open_timeout:180,
-					read_timeout: 180,
-					headers: {'User-Agent' => 'FuelSDK-Ruby-v' + MarketingCloudSDK::VERSION}
+				soap_header: header,
+				wsdl: wsdl,
+				endpoint: endpoint,
+				wsse_auth: ["*", "*"],
+				raise_errors: false,
+				log: debug,
+				open_timeout:180,
+				read_timeout: 180,
+				headers: {'User-Agent' => 'FuelSDK-Ruby-v' + MarketingCloudSDK::VERSION}
 			}
 
 			if use_oAuth2_authentication == true then
@@ -181,7 +181,7 @@ module MarketingCloudSDK
 			message['Action'] = action
 			message['Definitions'] = {'Definition' => properties}
 			message['Definitions'][:attributes!] = { 'Definition' => { 'xsi:type' => ('tns:' + object_type) }}
-
+			message['QueryAllAccounts'] = true
 			soap_request :perform, message
 		end
 
@@ -199,7 +199,7 @@ module MarketingCloudSDK
 				message['Configurations'] = {'Configuration' => properties}
 			end
 			message['Configurations'][:attributes!] = { 'Configuration' => { 'xsi:type' => ('tns:' + object_type) }}
-
+			message['QueryAllAccounts'] = true
 			soap_request :configure, message
 		end
 
@@ -228,11 +228,11 @@ module MarketingCloudSDK
 					message[:attributes!] = { 'Filter' => { 'xsi:type' => 'tns:ComplexFilterPart' }}
 					message['Filter'][:attributes!] = {
 						'LeftOperand' => { 'xsi:type' => 'tns:SimpleFilterPart' },
-					'RightOperand' => { 'xsi:type' => 'tns:SimpleFilterPart' }}
+						'RightOperand' => { 'xsi:type' => 'tns:SimpleFilterPart' }}
 				end
 			end
 			message = {'RetrieveRequest' => message}
-
+			message['QueryAllAcoounts'] = true
 			soap_request :retrieve, message
 		end
 
@@ -282,7 +282,7 @@ module MarketingCloudSDK
 			if upsert
 				message['Options'] = {"SaveOptions" => {"SaveOption" => {"PropertyName"=> "*", "SaveAction" => "UpdateAdd"}}}
 			end
-
+			message['QueryAllAccounts'] = true
 			soap_request action, message
 		end
 
