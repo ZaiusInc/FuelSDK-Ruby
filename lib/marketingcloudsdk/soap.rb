@@ -181,7 +181,6 @@ module MarketingCloudSDK
 			message['Action'] = action
 			message['Definitions'] = {'Definition' => properties}
 			message['Definitions'][:attributes!] = { 'Definition' => { 'xsi:type' => ('tns:' + object_type) }}
-			message['QueryAllAccounts'] = true
 			soap_request :perform, message
 		end
 
@@ -199,7 +198,6 @@ module MarketingCloudSDK
 				message['Configurations'] = {'Configuration' => properties}
 			end
 			message['Configurations'][:attributes!] = { 'Configuration' => { 'xsi:type' => ('tns:' + object_type) }}
-			message['QueryAllAccounts'] = true
 			soap_request :configure, message
 		end
 
@@ -232,7 +230,6 @@ module MarketingCloudSDK
 				end
 			end
 			message = {'RetrieveRequest' => message}
-			message['QueryAllAcoounts'] = true
 			soap_request :retrieve, message
 		end
 
@@ -282,7 +279,6 @@ module MarketingCloudSDK
 			if upsert
 				message['Options'] = {"SaveOptions" => {"SaveOption" => {"PropertyName"=> "*", "SaveAction" => "UpdateAdd"}}}
 			end
-			message['QueryAllAccounts'] = true
 			soap_request action, message
 		end
 
